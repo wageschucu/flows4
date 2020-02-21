@@ -208,7 +208,7 @@ function generateGoal(goals: Goals) {
   return goals[index];
 }
 
-const initGoals = ["de", "ne", "ja", "re"];
+const initGoals = ["de", "ne", "ja", "re"]
 
 const initState: GameState = {
   parameters: {
@@ -312,6 +312,15 @@ function loadGame(name?: string):GameState {
   console.log("loaded profile is: ", profiles[name])
   return profiles[name];
 }
+
+// TODO
+// 1- text area, replace punct with space, split on white spaces, sort into length buckets 
+// save to cookie: gameWordList
+// at start, read gameWorkList to ? model variable 
+// add parameter: word length:1,2,3,4...
+// 2- edit mask for parameters with drop downs for enums 
+
+function loadWordList() {}
 
 export const App: React.FC = () => {
   console.log("cookie:", cookieReader.getCookie("gameState"))
