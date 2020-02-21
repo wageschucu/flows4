@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
+import cookieReader from "./cookie.reader"
 
 enum Unit {
   chf,
@@ -202,8 +203,8 @@ function demotePlayer(state: GameState) {
 }
 function generateGoal(goals: Goals) {
   console.log("generateGoal: ", Math.round(Math.random() * goals.length));
-  const index=Math.trunc(Math.random() * goals.length)
-  console.log("index:",index)
+  const index = Math.trunc(Math.random() * goals.length);
+  console.log("index:", index);
   return goals[index];
 }
 
@@ -290,11 +291,31 @@ const Picker: React.FC<PickerProps> = (props: PickerProps) => {
   }
   return <div>not implemented: {gameState.parameters.input}</div>;
 };
+
+function saveGame(gameState: GameState) {
+  const cookie = cookieReader.getCookie("gameState")
+  const profiles = cookie ? JSON.parse(cookie) : {}
+  profiles[gameState.profile.name] = gameState
+  console.log("writing cookie:", JSON.stringify(gameState))
+  cookieReader.setCookie("gameState", JSON.stringify(profiles), 100)
+}
+
+function loadGame(name?: string):GameState {
+  const cookie = cookieReader.getCookie("gameState")
+  initState.score.interval = initState.parameters.startInterval;
+  if (!name) name = initState.profile.name;
+  const profiles = cookie ? JSON.parse(cookie) : {};
+  console.log("loaded profiles: ", profiles)
+  if (!profiles[name]) {
+    profiles[name] = initState;
+  }
+  console.log("loaded profile is: ", profiles[name])
+  return profiles[name];
+}
+
 export const App: React.FC = () => {
-  const [state, setState] = useState(() => {
-    initState.score.interval = initState.parameters.startInterval;
-    return initState;
-  });
+  console.log("cookie:", cookieReader.getCookie("gameState"))
+  const [state, setState] = useState(initState);
   console.log("render: state:", state);
   let disableGo = true;
   if (
@@ -314,6 +335,18 @@ export const App: React.FC = () => {
       </h1>
       <div className="parameters">{JSON.stringify(state.parameters)}</div>
       <div className="score">{JSON.stringify(state.score)}</div>
+      <div>
+        <input
+          type="button"
+          value="Save"
+          onClick={() => saveGame(state)}
+        ></input>
+        <input
+          type="button"
+          value="Load"
+          onClick={() => setState(()=>loadGame())}
+        ></input>
+      </div>
       <input
         type="button"
         className="go"
@@ -333,12 +366,13 @@ export const App: React.FC = () => {
         }}
       />
       <div className={"challenge "}>
-      <span className={"input-frame " + calcChallengeColorClassName(state)}>
-
-        <span className={"challengeSpan " + calcChallengeShowClassName(state)}>
-          {state.goal}{" "}
+        <span className={"input-frame " + calcChallengeColorClassName(state)}>
+          <span
+            className={"challengeSpan " + calcChallengeShowClassName(state)}
+          >
+            {state.goal}{" "}
           </span>
-          </span>
+        </span>
       </div>
       <Picker
         gameState={state}
@@ -356,7 +390,11 @@ export const App: React.FC = () => {
 export default App;
 
 function calcChallengeClassName(gameState: GameState): string {
-  return calcChallengeColorClassName(gameState) + " " + calcChallengeShowClassName(gameState);
+  return (
+    calcChallengeColorClassName(gameState) +
+    " " +
+    calcChallengeShowClassName(gameState)
+  );
 }
 
 function calcChallengeShowClassName(gameState: GameState): string {
@@ -382,4 +420,3 @@ function calcChallengeColorClassName(gameState: GameState): string {
   }
   return "";
 }
-
