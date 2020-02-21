@@ -36,3 +36,37 @@
     transform: rotate(360deg);
   }
 }
+
+.incorrect {
+  background-color:red
+}
+
+.correct {
+  background-color:green
+}
+
+.challenge {
+  font-weight: bold;
+  font-size: 2em;
+}
+
+.challengeSpan {
+  align-items: flex-start;
+  width: 2em;
+  padding :0.3em;
+
+}
+
+input[type=button] {
+  font-weight: bold;
+  font-size: 2em;
+  margin:1em;
+}
+
+.hide {
+  visibility: hidden;
+}
+
+.show {
+  visibility: visible;
+}
