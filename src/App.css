@@ -53,10 +53,16 @@
 .challengeSpan {
   align-items: flex-start;
   width: 2em;
-  padding :0.3em;
+  margin :0.3em;
 
 }
+input[type="button" i]:disabled {
+  color: black;
+}
 
+.input-frame {
+  border: solid 1px black;
+}
 input[type=button] {
   font-weight: bold;
   font-size: 2em;

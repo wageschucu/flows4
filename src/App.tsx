@@ -333,9 +333,12 @@ export const App: React.FC = () => {
         }}
       />
       <div className={"challenge "}>
-        <span className={"challengeSpan " + calcChallengeClassName(state)}>
+      <span className={"input-frame " + calcChallengeColorClassName(state)}>
+
+        <span className={"challengeSpan " + calcChallengeShowClassName(state)}>
           {state.goal}{" "}
-        </span>
+          </span>
+          </span>
       </div>
       <Picker
         gameState={state}
@@ -353,16 +356,30 @@ export const App: React.FC = () => {
 export default App;
 
 function calcChallengeClassName(gameState: GameState): string {
+  return calcChallengeColorClassName(gameState) + " " + calcChallengeShowClassName(gameState);
+}
+
+function calcChallengeShowClassName(gameState: GameState): string {
   if (
     gameState.state === StateEnum.PresentScore ||
     gameState.state === StateEnum.AwaitGo
   ) {
-    if (gameState.score.lastStatus.status === PlayStatusEnum.Failure)
-      return "incorrect show";
-    if (gameState.score.lastStatus.status === PlayStatusEnum.Success)
-      return "correct show";
+    return "show";
   } else if (gameState.state === StateEnum.Challenge) {
     return "show";
   }
   return "hide";
 }
+function calcChallengeColorClassName(gameState: GameState): string {
+  if (
+    gameState.state === StateEnum.PresentScore ||
+    gameState.state === StateEnum.AwaitGo
+  ) {
+    if (gameState.score.lastStatus.status === PlayStatusEnum.Failure)
+      return "incorrect";
+    if (gameState.score.lastStatus.status === PlayStatusEnum.Success)
+      return "correct";
+  }
+  return "";
+}
+
