@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, ChangeEvent } from "react";
 import "./App.css";
 import cookieReader from "./cookie.reader"
 
@@ -102,12 +102,13 @@ enum InputType {
   Keyboard
 }
 type GameParameters = {
-  startInterval: number;
-  streekLength: number;
-  delta: number;
-  showType: ShowType;
-  input: InputType;
-  leavePickerOnScreen: boolean;
+  startInterval: number
+  streekLength: number
+  delta: number
+  showType: ShowType
+  input: InputType
+  leavePickerOnScreen: boolean
+  pickerLength:number
 };
 type Goal = string;
 
@@ -121,33 +122,41 @@ enum StateEnum {
   AwaitAnswer = "AwaitAnswer",
   EvaluateAnswer = "EvaluateAnswer"
 }
+
+type Dictionary = {
+  [key in string]: string 
+}
+
 type GameState = {
-  profile: Profile;
-  score: Score;
-  parameters: GameParameters;
-  display?: any;
-  input?: any;
-  goal?: Goal;
-  goals: Goals;
-  answer?: Answer;
-  state: StateEnum;
+  profile: Profile,
+  score: Score,
+  parameters: GameParameters,
+  display?: any,
+  input?: any,
+  goal?: Goal,
+  goals: Goals,
+  pickerChoices:Goals,
+  answer?: Answer,
+  state: StateEnum,
+  text: Dictionary,
+  currentTextName: string,
 };
 
 function presentScore(state: GameState) {
-  state.state = StateEnum.PresentScore;
-  return awaitGo(state);
+  state.state = StateEnum.PresentScore
+  return awaitGo(state)
 }
 function awaitGo(state: GameState) {
-  state.state = StateEnum.AwaitGo;
-  return { ...state };
+  state.state = StateEnum.AwaitGo
+  return { ...state }
 }
 function calcNextGoal(state: GameState) {
-  state.state = StateEnum.CalcNextGoal;
+  state.state = StateEnum.CalcNextGoal
 
   console.log("calcNextGoal");
   if (state.score.streekAttempts >= state.parameters.streekLength) {
     if (state.score.streekScore >= (state.parameters.streekLength * 2.0) / 3) {
-      advancePlayer(state);
+      advancePlayer(state)
     } else if (
       state.score.streekScore <=
       (state.parameters.streekLength * 1.0) / 3
@@ -158,11 +167,12 @@ function calcNextGoal(state: GameState) {
     state.score.streekAttempts = 0;
     state.score.attempts++;
   }
-  console.log("calcNextGoal1", state.goal);
-  state.goal = generateGoal(state.goals);
-  console.log("calcNextGoal2", state.goal);
-  state.answer = undefined;
-  return { ...state };
+  console.log("calcNextGoal1", state.goal)
+  state.goal = generateGoal(state.goals)
+  state.pickerChoices = generateChoices([...state.goals], state.goal, state.parameters.pickerLength)
+  console.log("calcNextGoal2", state.goal)
+  state.answer = undefined
+  return { ...state }
 }
 function challenge(state: GameState) {
   state.state = StateEnum.Challenge;
@@ -202,22 +212,52 @@ function demotePlayer(state: GameState) {
   state.score.interval += state.score.interval * state.parameters.delta;
 }
 function generateGoal(goals: Goals) {
-  console.log("generateGoal: ", Math.round(Math.random() * goals.length));
   const index = Math.trunc(Math.random() * goals.length);
-  console.log("index:", index);
   return goals[index];
 }
+function shuffle(array:Goals) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
 
-const initGoals = ["de", "ne", "ja", "re"]
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
+function generateChoices(array:Goals, goal:Goal, length:number) {
+   // random selection lenght-1
+   array = [...array]
+   const index=array.indexOf(goal)
+   array.splice(index,1)
+   array = shuffle(array)
+   array = array.slice(0,length-1)
+   // add goal to list
+   array.push(goal)   
+   // noch mal schuffel 
+  return shuffle(array)
+}
+
+const initGoals = ["de", "ne", "ja", "re", "ch","sp", "au", "ie", "ei", "eu", "ne", "en", "do", "zu", "ko", "ge", "be", "um", "me", "an", "ha", "in", "we", "ld", "ki"]
 
 const initState: GameState = {
   parameters: {
-    startInterval: 2000,
+    startInterval: 1000,
     streekLength: 3,
     delta: 0.2,
     showType: ShowType.Flash,
     input: InputType.Group,
-    leavePickerOnScreen: false
+    leavePickerOnScreen: false,
+    pickerLength: 5
   },
   profile: { name: "Olivia" },
   score: {
@@ -232,8 +272,11 @@ const initState: GameState = {
   input: InputType.Group,
   goal: undefined,
   goals: initGoals,
+  pickerChoices: [],
   answer: undefined,
-  state: StateEnum.PresentScore
+  state: StateEnum.PresentScore,
+  text: {},
+  currentTextName: ""
 };
 interface PickerProps {
   gameState: GameState;
@@ -253,7 +296,7 @@ const Picker: React.FC<PickerProps> = (props: PickerProps) => {
   if (gameState.parameters.input === InputType.Group) {
     return (
       <div className={showPicker ? "show" : "hide"}>
-        {gameState.goals.map(goal => {
+        {gameState.pickerChoices.map(goal => {
           let color = "default";
           let disable = true;
           if (showAnswer) {
@@ -319,12 +362,13 @@ function loadGame(name?: string):GameState {
 // at start, read gameWorkList to ? model variable 
 // add parameter: word length:1,2,3,4...
 // 2- edit mask for parameters with drop downs for enums 
+// 3- prettify display and colors for olivia 
 
 function loadWordList() {}
 
 export const App: React.FC = () => {
   console.log("cookie:", cookieReader.getCookie("gameState"))
-  const [state, setState] = useState(initState);
+  const [state, setState] = useState(initState)
   console.log("render: state:", state);
   let disableGo = true;
   if (
@@ -333,7 +377,10 @@ export const App: React.FC = () => {
   )
     disableGo = false;
 
-  return (
+    const onChangeText = (event: ChangeEvent<HTMLTextAreaElement>) => {
+      debugger
+    }
+    return (
     <div className="App">
       <h1
         onClick={() => {
@@ -356,6 +403,7 @@ export const App: React.FC = () => {
           onClick={() => setState(()=>loadGame())}
         ></input>
       </div>
+      <h2 className="score">Score: {JSON.stringify(Math.round(state.parameters.startInterval-state.score.interval))}</h2>
       <input
         type="button"
         className="go"
@@ -388,15 +436,25 @@ export const App: React.FC = () => {
         onChoose={(gameState: GameState) => {
           setState(state => {
             return { ...state, answer: gameState.answer };
-          });
+          });   
           setState(evaluateAnswer);
         }}
       />
       <div className="stop"></div>
+      <div className="loadarea">
+        <input type="text" name="textname"  value={state.currentTextName} onChange={function(){
+        }}/>
+        <input type="button" value="save"/>
+        <textarea name="text" onChange={onChangeText} value={state.text["test"]}>
+
+        </textarea>
+      </div>
+      
     </div>
   );
 };
 export default App;
+
 
 function calcChallengeClassName(gameState: GameState): string {
   return (
@@ -426,6 +484,9 @@ function calcChallengeColorClassName(gameState: GameState): string {
       return "incorrect";
     if (gameState.score.lastStatus.status === PlayStatusEnum.Success)
       return "correct";
+  }
+  else if (gameState.state === StateEnum.CalcNextGoal ) {
+      return "prompt"
   }
   return "";
 }

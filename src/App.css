@@ -45,6 +45,10 @@
   background-color:green
 }
 
+.prompt.input-frame  {
+  border: solid 3px blue;
+}
+
 .challenge {
   font-weight: bold;
   font-size: 2em;
@@ -56,6 +60,7 @@
   margin :0.3em;
 
 }
+
 input[type="button" i]:disabled {
   color: black;
 }
@@ -63,6 +68,7 @@ input[type="button" i]:disabled {
 .input-frame {
   border: solid 1px black;
 }
+
 input[type=button] {
   font-weight: bold;
   font-size: 2em;
