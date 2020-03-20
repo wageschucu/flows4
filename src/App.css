@@ -38,11 +38,11 @@
 }
 
 .incorrect {
-  background-color:red
+  background-color:pink
 }
 
 .correct {
-  background-color:green
+  background-color:lightgreen
 }
 
 .prompt.input-frame  {

@@ -246,6 +246,10 @@ function generateChoices(array:Goals, goal:Goal, length:number) {
    // noch mal schuffel 
   return shuffle(array)
 }
+const German = {
+  vowels : "aäeioöuü",
+  consonants: "bcdfghjklmnpqrstvwxyz"
+}
 
 const initGoals = ["de", "ne", "ja", "re", "ch","sp", "au", "ie", "ei", "eu", "ne", "en", "do", "zu", "ko", "ge", "be", "um", "me", "an", "ha", "in", "we", "ld", "ki"]
 
@@ -255,7 +259,7 @@ const initState: GameState = {
     streekLength: 3,
     delta: 0.2,
     showType: ShowType.Flash,
-    input: InputType.Group,
+    input: InputType.Spell,
     leavePickerOnScreen: false,
     pickerLength: 5
   },
@@ -269,7 +273,7 @@ const initState: GameState = {
     lastStatus: {}
   },
   display: undefined,
-  input: InputType.Group,
+  input: InputType.Spell,
   goal: undefined,
   goals: initGoals,
   pickerChoices: [],
@@ -279,38 +283,38 @@ const initState: GameState = {
   currentTextName: ""
 };
 interface PickerProps {
-  gameState: GameState;
-  onChoose: (gameState: GameState) => any;
+  gameState: GameState
+  onChoose: (gameState: GameState) => any
 }
 const Picker: React.FC<PickerProps> = (props: PickerProps) => {
-  const { gameState, onChoose } = props;
+  const { gameState, onChoose } = props
   const showAnswer =
     gameState.state === StateEnum.PresentScore ||
-    gameState.state === StateEnum.AwaitGo;
+    gameState.state === StateEnum.AwaitGo
 
   const showPicker =
     gameState.parameters.leavePickerOnScreen ||
     (gameState.state !== StateEnum.Challenge &&
-      gameState.state !== StateEnum.CalcNextGoal);
+      gameState.state !== StateEnum.CalcNextGoal)
 
   if (gameState.parameters.input === InputType.Group) {
     return (
       <div className={showPicker ? "show" : "hide"}>
         {gameState.pickerChoices.map(goal => {
-          let color = "default";
-          let disable = true;
+          let color = "default"
+          let disable = true
           if (showAnswer) {
             if (gameState.score.lastStatus.status === PlayStatusEnum.Success) {
               if (gameState.answer === goal) {
-                color = "correct";
+                color = "correct"
               }
             } else if (
               gameState.score.lastStatus?.status === PlayStatusEnum.Failure
             ) {
               if (gameState.answer === goal) {
-                color = "incorrect";
+                color = "incorrect"
               } else if (gameState.goal === goal) {
-                color = "correct";
+                color = "correct"
               }
             }
           } else {
@@ -321,19 +325,61 @@ const Picker: React.FC<PickerProps> = (props: PickerProps) => {
               type="button"
               value={goal}
               onClick={() => {
-                gameState.answer = goal;
-                onChoose(gameState);
+                gameState.answer = goal
+                onChoose(gameState)
               }}
               className={color}
               disabled={disable}
             />
-          );
+          )
         })}
       </div>
-    );
+    )
   }
-  return <div>not implemented: {gameState.parameters.input}</div>;
-};
+  if (gameState.parameters.input === InputType.Spell) {
+    // layout vowels and consonants: two rows 
+    // input adds to answer array
+    // backinput pops array 
+    
+    return (
+      <div className={showPicker ? "show" : "hide"}>
+        {(German.vowels+German.consonants).split('').map(goal => {
+          let color = "default"
+          let disable = true
+          if (showAnswer) {
+            if (gameState.score.lastStatus.status === PlayStatusEnum.Success) {
+              if (gameState.answer && gameState.answer?.indexOf(goal) >=0) {
+                color = "correct"
+              }
+            } else if (
+              gameState.score.lastStatus?.status === PlayStatusEnum.Failure
+            ) {
+              if (gameState.answer && gameState.answer?.indexOf(goal) >=0) {
+                color = "incorrect"
+              } else if (gameState.goal && gameState.goal?.indexOf( goal)>=0 ) {
+                color = "correct"
+              }
+            }
+          } else {
+            if (gameState.state === StateEnum.AwaitAnswer) disable = false
+          }
+          return (
+            <input
+              type="button"
+              value={goal}
+              onClick={() => {
+                gameState.answer = (gameState.answer || '') + goal 
+                onChoose(gameState)                                
+              }}
+              className={color}
+              disabled={disable}
+            />
+          )
+        })}
+      </div>
+    )
+  }  return <div>not implemented: {gameState.parameters.input}</div>
+}
 
 function saveGame(gameState: GameState) {
   const cookie = cookieReader.getCookie("gameState")
@@ -345,15 +391,15 @@ function saveGame(gameState: GameState) {
 
 function loadGame(name?: string):GameState {
   const cookie = cookieReader.getCookie("gameState")
-  initState.score.interval = initState.parameters.startInterval;
-  if (!name) name = initState.profile.name;
-  const profiles = cookie ? JSON.parse(cookie) : {};
+  initState.score.interval = initState.parameters.startInterval
+  if (!name) name = initState.profile.name
+  const profiles = cookie ? JSON.parse(cookie) : {}
   console.log("loaded profiles: ", profiles)
   if (!profiles[name]) {
-    profiles[name] = initState;
+    profiles[name] = initState
   }
   console.log("loaded profile is: ", profiles[name])
-  return profiles[name];
+  return profiles[name]
 }
 
 // TODO
@@ -364,27 +410,24 @@ function loadGame(name?: string):GameState {
 // 2- edit mask for parameters with drop downs for enums 
 // 3- prettify display and colors for olivia 
 
-function loadWordList() {}
-
 export const App: React.FC = () => {
   console.log("cookie:", cookieReader.getCookie("gameState"))
   const [state, setState] = useState(initState)
-  console.log("render: state:", state);
-  let disableGo = true;
+  console.log("render: state:", state)
+  let disableGo = true
   if (
     state.state === StateEnum.AwaitGo ||
     state.state === StateEnum.PresentScore
   )
-    disableGo = false;
+    disableGo = false
 
     const onChangeText = (event: ChangeEvent<HTMLTextAreaElement>) => {
-      debugger
     }
     return (
     <div className="App">
       <h1
         onClick={() => {
-          setState(state => presentScore(state));
+          setState(state => presentScore(state))
         }}
       >
         Lesen wie!
@@ -410,20 +453,20 @@ export const App: React.FC = () => {
         value="GO"
         disabled={disableGo}
         onClick={() => {
-          setState(calcNextGoal);
+          setState(calcNextGoal)
           console.log(
             "setting timemout millisecs : ",
             state.score.interval,
             state
           );
           setTimeout(() => {
-            setState(challenge);
-            setTimeout(() => setState(awaitAnswer), state.score.interval);
-          }, 1000);
+            setState(challenge)
+            setTimeout(() => setState(awaitAnswer), state.score.interval)
+          }, 1000)
         }}
       />
       <div className={"challenge "}>
-        <span className={"input-frame " + calcChallengeColorClassName(state)}>
+        <span className={"input-frame " +  calcChallengeColorClassName(state, true) }>
           <span
             className={"challengeSpan " + calcChallengeShowClassName(state)}
           >
@@ -431,13 +474,30 @@ export const App: React.FC = () => {
           </span>
         </span>
       </div>
+      <p></p>
+      <div className={"challenge "}>
+        <span className={"input-frame " + calcChallengeColorClassName(state)}>
+          <span
+            className={"challengeSpan show" }
+          >
+            {state.answer}{" "}
+          </span>
+        </span>
+      </div>
       <Picker
         gameState={state}
         onChoose={(gameState: GameState) => {
           setState(state => {
-            return { ...state, answer: gameState.answer };
-          });   
-          setState(evaluateAnswer);
+            return { ...state, answer: gameState.answer }
+          })
+          if ( gameState.parameters.input === InputType.Spell ) {
+            if ( gameState.answer && gameState.goal && gameState.answer?.length>=gameState.goal?.length ) {
+             setState(evaluateAnswer)
+            }
+          }
+          else {
+            setState(evaluateAnswer)
+          }
         }}
       />
       <div className="stop"></div>
@@ -475,14 +535,16 @@ function calcChallengeShowClassName(gameState: GameState): string {
   }
   return "hide";
 }
-function calcChallengeColorClassName(gameState: GameState): string {
+function calcChallengeColorClassName(gameState: GameState, goal:boolean = false): string {
   if (
     gameState.state === StateEnum.PresentScore ||
     gameState.state === StateEnum.AwaitGo
   ) {
+    if (goal && gameState.score.lastStatus.status && gameState.parameters.input === InputType.Spell) 
+      return "correct"
     if (gameState.score.lastStatus.status === PlayStatusEnum.Failure)
       return "incorrect";
-    if (gameState.score.lastStatus.status === PlayStatusEnum.Success)
+    if (gameState.score.lastStatus.status === PlayStatusEnum.Success )
       return "correct";
   }
   else if (gameState.state === StateEnum.CalcNextGoal ) {
