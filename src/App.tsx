@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent, ReactNode } from "react";
 import "./App.css";
 import cookieReader from "./cookie.reader"
 
@@ -247,8 +247,12 @@ function generateChoices(array:Goals, goal:Goal, length:number) {
   return shuffle(array)
 }
 const German = {
-  vowels : "aäeioöuü",
-  consonants: "bcdfghjklmnpqrstvwxyz"
+  vowels : "i  e  a",
+  vowelsRounded : "ü u  ö o  ä",
+  consonantStops: "p t k  b d g",
+  consonantFricatives: "s f sch ch  v",
+  consonantAspirates: "pf tz",
+  liquids: "m n l r",
 }
 
 const initGoals = ["de", "ne", "ja", "re", "ch","sp", "au", "ie", "ei", "eu", "ne", "en", "do", "zu", "ko", "ge", "be", "um", "me", "an", "ha", "in", "we", "ld", "ki"]
@@ -286,6 +290,7 @@ interface PickerProps {
   gameState: GameState
   onChoose: (gameState: GameState) => any
 }
+
 const Picker: React.FC<PickerProps> = (props: PickerProps) => {
   const { gameState, onChoose } = props
   const showAnswer =
@@ -340,45 +345,81 @@ const Picker: React.FC<PickerProps> = (props: PickerProps) => {
     // layout vowels and consonants: two rows 
     // input adds to answer array
     // backinput pops array 
-    
-    return (
-      <div className={showPicker ? "show" : "hide"}>
-        {(German.vowels+German.consonants).split('').map(goal => {
-          let color = "default"
-          let disable = true
-          if (showAnswer) {
-            if (gameState.score.lastStatus.status === PlayStatusEnum.Success) {
-              if (gameState.answer && gameState.answer?.indexOf(goal) >=0) {
-                color = "correct"
-              }
-            } else if (
-              gameState.score.lastStatus?.status === PlayStatusEnum.Failure
-            ) {
-              if (gameState.answer && gameState.answer?.indexOf(goal) >=0) {
-                color = "incorrect"
-              } else if (gameState.goal && gameState.goal?.indexOf( goal)>=0 ) {
-                color = "correct"
-              }
-            }
-          } else {
-            if (gameState.state === StateEnum.AwaitAnswer) disable = false
+
+    const row = (letters:string, className:string="") => {return letters.split(' ').map(goal => {
+      let color = className
+      let disable = true
+      if (showAnswer) {
+        if (gameState.score.lastStatus.status === PlayStatusEnum.Success) {
+          if (gameState.answer && gameState.answer?.indexOf(goal) >=0) {
+            color += "correct"
           }
-          return (
-            <input
-              type="button"
-              value={goal}
-              onClick={() => {
-                gameState.answer = (gameState.answer || '') + goal 
-                onChoose(gameState)                                
-              }}
-              className={color}
-              disabled={disable}
-            />
-          )
-        })}
+        } else if (
+          gameState.score.lastStatus?.status === PlayStatusEnum.Failure
+        ) {
+          if (gameState.answer && gameState.answer?.indexOf(goal) >=0) {
+            color += "incorrect"
+          } else if (gameState.goal && gameState.goal?.indexOf( goal)>=0 ) {
+            color += "correct"
+          }
+        }
+      } else {
+        if (gameState.state === StateEnum.AwaitAnswer) disable = false
+      }
+      if (!goal.trim()) 
+       return <br></br>
+      return (
+        <input
+          type="button"
+          value={goal}
+          onClick={() => {
+            gameState.answer = (gameState.answer || '') + goal 
+            onChoose(gameState)                                
+          }}
+          className={color}
+          disabled={disable}
+        />
+      )
+    }
+    )}
+    return (
+      <>
+      <div className={"challenge "}>
+        <span className={"input-frame " + calcChallengeColorClassName(gameState)}>
+          <span
+            className={"challengeSpan show" }
+          >
+            {gameState.answer}{" "}
+          </span>
+        </span>
       </div>
+      <p></p>
+      <div className={showPicker ? "show" : "hide"}>
+        <div className="wrapper">
+        <div className="box vowels">
+        {row(German.vowels)}
+        </div>
+        <div className="box">
+        {row(German.consonantStops)}
+        </div>
+        <div className="box d">
+        {row(German.consonantFricatives)}
+        </div>
+        <div className="box">
+        {row(German.vowelsRounded, "vowelsRounded")}
+        </div>
+        <div className="box e">
+        {row(German.consonantAspirates)}
+        </div>
+        <div className="box f">
+        {row(German.liquids)}
+        </div>
+      </div>
+      </div>
+      </>
     )
-  }  return <div>not implemented: {gameState.parameters.input}</div>
+  }
+  return <div>not implemented: {gameState.parameters.input}</div>
 }
 
 function saveGame(gameState: GameState) {
@@ -475,15 +516,6 @@ export const App: React.FC = () => {
         </span>
       </div>
       <p></p>
-      <div className={"challenge "}>
-        <span className={"input-frame " + calcChallengeColorClassName(state)}>
-          <span
-            className={"challengeSpan show" }
-          >
-            {state.answer}{" "}
-          </span>
-        </span>
-      </div>
       <Picker
         gameState={state}
         onChoose={(gameState: GameState) => {
@@ -500,15 +532,6 @@ export const App: React.FC = () => {
           }
         }}
       />
-      <div className="stop"></div>
-      <div className="loadarea">
-        <input type="text" name="textname"  value={state.currentTextName} onChange={function(){
-        }}/>
-        <input type="button" value="save"/>
-        <textarea name="text" onChange={onChangeText} value={state.text["test"]}>
-
-        </textarea>
-      </div>
       
     </div>
   );
